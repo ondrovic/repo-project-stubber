@@ -1,0 +1,57 @@
+name: Generate Config
+
+on:
+  push:
+    branches:
+      - main  # or your default branch name
+  workflow_dispatch:
+    inputs:
+      repository-name:
+        description: 'The name of the repository'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  generate-config:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Check if config has been generated
+      id: check-config
+      run: |
+        if [ -f ".github/ISSUE_TEMPLATE/issue_template_configured.txt" ]; then
+          echo "Config already generated"
+          echo "skip=true" >> $GITHUB_OUTPUT
+        else
+          echo "Config not generated yet"
+          echo "skip=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Set up Git
+      if: steps.check-config.outputs.skip == 'false'
+      run: |
+        git config --global user.name 'GitHub Actions'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Run generate_config.sh
+      if: steps.check-config.outputs.skip == 'false'
+      run: |
+        chmod +x .github/scripts/generate_config.sh
+        .github/scripts/generate_config.sh ${{ github.event.inputs.repository-name || github.repository }}
+    
+    - name: Commit and push generated config
+      if: steps.check-config.outputs.skip == 'false'
+      run: |
+        git add .github/ISSUE_TEMPLATE/config.yml
+        git add .github/ISSUE_TEMPLATE/issue_template_configured.txt
+        git commit -m "Update generated config.yml and issue_template_configured.txt"
+        git push

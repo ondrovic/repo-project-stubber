@@ -16,6 +16,10 @@
 !*/
 !**/
 
+# Include the .github
+!.github/
+!.github/**
+
 # Include TODO
 !TODO
 
