@@ -2,8 +2,6 @@ name: Generate Config
 
 on:
   push:
-    branches:
-      - ${{ github.event.repository.default_branch }}
   workflow_dispatch:
     inputs:
       repository-name:
@@ -17,6 +15,7 @@ permissions:
 
 jobs:
   generate-config:
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
