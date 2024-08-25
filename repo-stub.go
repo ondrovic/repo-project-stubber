@@ -221,7 +221,7 @@ func handleIgnoreFile(baseURL string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get .gitignore file info: %v", err)
 	}
-	
+
 	return downloadAndSaveFile(item.DownloadURL, filepath.Join(outputDirectory, ".gitignore"), overwriteExistingFiles)
 }
 
@@ -283,7 +283,6 @@ func downloadFileFromGitHub(apiURL, destPath string, overwrite bool) error {
 
 	return downloadAndSaveFile(item.DownloadURL, destPath, overwrite)
 }
-
 
 func getGitHubFileInfo(apiURL string) (*GitHubItem, error) {
 	resp, err := http.Get(apiURL)

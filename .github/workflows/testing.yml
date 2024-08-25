@@ -3,25 +3,12 @@ name: testing
 on:
   pull_request:
   push:
+    branches: [master]
     tags-ignore: 
       - '*'  # Ignores all tag names
 
 jobs:
-  default-branch-name:
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-    - name: Determine default branch
-      run: |
-        DEFAULT_BRANCH=$(git remote show origin | awk '/HEAD branch/ {print $NF}')
-        echo "default_branch=$DEFAULT_BRANCH" >> $GITHUB_ENV
-        echo "default_branch_ref=refs/heads/$DEFAULT_BRANCH" >> $GITHUB_ENV
-
-    - name: debug
-      run: echo ${{ env.default_branch }}
   testing:
-    if: github.ref == env.default_branch_ref
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
