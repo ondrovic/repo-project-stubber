@@ -3,7 +3,7 @@ name: Generate Config
 on:
   push:
     branches:
-      - main  # or your default branch name
+      - master
   workflow_dispatch:
     inputs:
       repository-name:
