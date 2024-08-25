@@ -11,6 +11,7 @@
 !README.md
 !LICENSE
 !generate_config.sh
+!goreleaser.yaml
 
 # Include all directories recursively
 !*/

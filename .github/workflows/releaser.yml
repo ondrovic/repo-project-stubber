@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   goreleaser:
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

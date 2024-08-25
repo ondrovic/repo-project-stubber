@@ -47,7 +47,7 @@ func main() {
 	}
 
 	rootCmd := &cobra.Command{
-		Use:   "github-project-stub",
+		Use:   "repo-stub",
 		Short: "A CLI tool to download GitHub repository contents when creating a new project.",
 		Run:   run,
 	}
@@ -95,43 +95,6 @@ func run(cmd *cobra.Command, args []string) {
 	}
 }
 
-// func getRepoContents(repoUri, path string) ([]GitHubItem, error) {
-// 	url := repoUri
-// 	if path != "" {
-// 		url = fmt.Sprintf("%s/%s", repoUri, path)
-// 	}
-
-// 	req, err := http.NewRequest("GET", url, nil)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to create request %s: %v", url, err)
-// 	}
-
-// 	if githubToken != "" {
-// 		req.Header.Set("Authorization", "token "+githubToken)
-// 	}
-
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to get contents from '%s': %v", url, err)
-// 	}
-// 	defer resp.Body.Close()
-
-// 	if resp.StatusCode != http.StatusOK {
-// 		return nil, fmt.Errorf("failed to get contents %s: HTTP status %d", url, resp.StatusCode)
-// 	}
-
-// 	var contents []GitHubItem
-// 	if err := json.NewDecoder(resp.Body).Decode(&contents); err != nil {
-// 		// If it's not a JSON array, it might be a single file content
-// 		var singleItem GitHubItem
-// 		if err := json.NewDecoder(resp.Body).Decode(&singleItem); err != nil {
-// 			return nil, fmt.Errorf("failed to decode response %s: %v", url, err)
-// 		}
-// 		contents = []GitHubItem{singleItem}
-// 	}
-
-// 	return contents, nil
-// }
 func getRepoContents(repoUri, path string) ([]GitHubItem, error) {
 	url := repoUri
 	if path != "" {
@@ -252,11 +215,6 @@ func handleDirectoryTypeContent(baseURL string, item GitHubItem) error {
 	}
 }
 
-// func handleIgnoreFile(baseURL string) error {
-// 	ignoreApiURL := fmt.Sprintf("%s/.ignorefiles", baseURL)
-// 	return downloadFileFromGitHub(ignoreApiURL, filepath.Join(outputDirectory, ".gitignore"), overwriteExistingFiles)
-// }
-
 func handleIgnoreFile(baseURL string) error {
 	ignoreApiURL := fmt.Sprintf("%s/.ignorefiles", baseURL)
 	item, err := getGitHubFileInfo(ignoreApiURL)
@@ -326,24 +284,7 @@ func downloadFileFromGitHub(apiURL, destPath string, overwrite bool) error {
 	return downloadAndSaveFile(item.DownloadURL, destPath, overwrite)
 }
 
-// func getGitHubFileInfo(apiURL string) (*GitHubItem, error) {
-// 	resp, err := http.Get(apiURL)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to get file info from '%s': %v", apiURL, err)
-// 	}
-// 	defer resp.Body.Close()
 
-// 	if resp.StatusCode != http.StatusOK {
-// 		return nil, fmt.Errorf("failed to get file info: HTTP status %d", resp.StatusCode)
-// 	}
-
-// 	var item GitHubItem
-// 	if err := json.NewDecoder(resp.Body).Decode(&item); err != nil {
-// 		return nil, fmt.Errorf("failed to decode file info: %v", err)
-// 	}
-
-// 	return &item, nil
-// }
 func getGitHubFileInfo(apiURL string) (*GitHubItem, error) {
 	resp, err := http.Get(apiURL)
 	if err != nil {
