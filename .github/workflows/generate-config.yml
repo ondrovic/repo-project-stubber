@@ -3,7 +3,7 @@ name: Generate Config
 on:
   push:
     branches:
-      - master
+      - ${{ github.event.repository.default_branch }}
   workflow_dispatch:
     inputs:
       repository-name:
