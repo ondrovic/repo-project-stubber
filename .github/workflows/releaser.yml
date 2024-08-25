@@ -1,11 +1,7 @@
 # .github/workflows/release.yml
 name: goreleaser
 
-env:
-  DEFAULT_BRANCH: refs/heads/${{ github.event.repository.default_branch }}
-
 on:
-  # pull_request:
   push:
     branches: [master]
     # run only against tags
