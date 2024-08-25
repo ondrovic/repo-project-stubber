@@ -1,0 +1,25 @@
+# Exclude everything
+*
+
+# Allow the .gitignore itself to be tracked
+!.gitignore
+
+# Include .gitkeep files in any directory
+!**/.gitkeep
+
+# Include specific files in the root
+!README.md
+!LICENSE
+!generate_config.sh
+
+# Include all directories recursively
+!*/
+!**/
+
+# Include TODO
+!TODO
+
+# include source files
+!go.mod
+!go.sum
+!*.go*

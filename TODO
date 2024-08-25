@@ -1,0 +1,8 @@
+project:
+  ☐ refactor cli some not everything is in a single file
+    ☐ swap out pfterm with bubble tea this will be a good project for it
+  readme.md:
+    ☐ update based on relevant project info
+  testing:
+    ☐ write unit tests
+  
