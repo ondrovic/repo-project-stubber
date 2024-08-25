@@ -3,7 +3,8 @@ name: testing
 on:
   pull_request:
   push:
-    branches: [master]
+    branches:
+      - ${{ github.event.repository.default_branch }}
     tags-ignore: "*"
 
 jobs:
