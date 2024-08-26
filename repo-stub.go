@@ -210,6 +210,8 @@ func handleDirectoryTypeContent(baseURL string, item GitHubItem) error {
 		return handleVSCodeFiles(baseURL)
 	case ".workflows":
 		return handleWorkflowFiles(baseURL)
+	case ".releasers":
+		return handleReleaserFiles(baseURL)
 	default:
 		return processRepository(baseURL, item.Path)
 	}
@@ -254,6 +256,11 @@ func handleTodoFile(baseURL string) error {
 func handleVSCodeFiles(baseURL string) error {
 	vscodeApiURL := fmt.Sprintf("%s/.vscode/commands.json", baseURL)
 	return downloadFileFromGitHub(vscodeApiURL, filepath.Join(outputDirectory, ".vscode", "commands.json"), overwriteExistingFiles)
+}
+
+func handleReleaserFiles(baseURL string) error {
+	releaserApiURL := fmt.Sprintf("%s/.releasers/%s/goreleaser.yaml", baseURL, projectLanguage)
+	return downloadFileFromGitHub(releaserApiURL, filepath.Join(outputDirectory, "goreleaser.yaml"), overwriteExistingFiles)
 }
 
 func handleWorkflowFiles(baseURL string) error {

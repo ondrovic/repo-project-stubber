@@ -1,7 +1,6 @@
 name: Generate Config
 
 on:
-  push:
   workflow_dispatch:
     inputs:
       repository-name:
@@ -14,17 +13,15 @@ permissions:
   contents: write
 
 jobs:
-  generate-config:
+  check-config:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
-
+      uses: actions/checkout@v4
     - name: Check if config has been generated
-      id: check-config
+      id: check
       run: |
         if [ -f ".github/ISSUE_TEMPLATE/issue_template_configured.txt" ]; then
           echo "Config already generated"
@@ -34,20 +31,28 @@ jobs:
           echo "skip=false" >> $GITHUB_OUTPUT
         fi
 
+  generate-config:
+    needs: check-config
+    if: needs.check-config.outputs.skip == 'false' && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
     - name: Set up Git
-      if: steps.check-config.outputs.skip == 'false'
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
     
     - name: Run generate_config.sh
-      if: steps.check-config.outputs.skip == 'false'
       run: |
         chmod +x .github/scripts/generate_config.sh
         .github/scripts/generate_config.sh ${{ github.event.inputs.repository-name || github.repository }}
     
     - name: Commit and push generated config
-      if: steps.check-config.outputs.skip == 'false'
       run: |
         git add .github/ISSUE_TEMPLATE/config.yml
         git add .github/ISSUE_TEMPLATE/issue_template_configured.txt
