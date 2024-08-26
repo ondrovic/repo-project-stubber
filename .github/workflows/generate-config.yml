@@ -33,7 +33,7 @@ jobs:
 
   generate-config:
     needs: check-config
-    if: needs.check-config.outputs.skip == 'false' && github.ref_name == github.event.repository.default_branch
+    if: needs.check-config.outputs.skip != 'true'
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
