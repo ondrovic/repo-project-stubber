@@ -1,6 +1,9 @@
 project:
+  ☐ convert items to that are needed
+  ☐ make it so the output is args[0] and then we do flags
   ☐ refactor cli some not everything is in a single file
     ☐ swap out pfterm with bubble tea this will be a good project for it
+    ☐ code cleanup after
   readme.md:
     ☐ update based on relevant project info
   testing:

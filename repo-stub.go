@@ -47,8 +47,9 @@ func main() {
 	}
 
 	rootCmd := &cobra.Command{
-		Use:   "repo-stub",
+		Use:   "repo-stub <output-directory> [flags]",
 		Short: "A CLI tool to download GitHub repository contents when creating a new project.",
+		Args:  cobra.ExactArgs(1),
 		Run:   run,
 	}
 
@@ -56,7 +57,8 @@ func main() {
 	viper.BindPFlags(rootCmd.Flags())
 
 	if err := rootCmd.Execute(); err != nil {
-		pterm.Error.Print(err)
+		// pterm.Error.Print(err)
+		return
 	}
 }
 
@@ -64,7 +66,7 @@ func initFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&repoOwner, "owner", "o", "ondrovic", "Repository owner")
 	cmd.Flags().StringVarP(&repoName, "repo", "r", "vscode", "Repository name")
 	cmd.Flags().StringVarP(&branch, "branch", "b", "master", "Branch name")
-	cmd.Flags().StringVarP(&outputDirectory, "output", "d", "", "Output directory")
+	// cmd.Flags().StringVarP(&outputDirectory, "output", "d", "", "Output directory")
 	cmd.Flags().BoolVarP(&includeMakeFile, "makefile", "m", false, "Does your project need a makefile?")
 	cmd.Flags().StringVarP(&projectLanguage, "project-language", "p", "go", "What language is your app?")
 	cmd.Flags().BoolVarP(&overwriteExistingFiles, "overwrite", "w", false, "Overwrite existing files?")
@@ -74,6 +76,9 @@ func initFlags(cmd *cobra.Command) {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	outputDirectory = args[0]
+
+	// Initialize the HTTP client
 	client = &http.Client{}
 
 	baseURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents", repoOwner, repoName)
@@ -218,13 +223,12 @@ func handleDirectoryTypeContent(baseURL string, item GitHubItem) error {
 }
 
 func handleIgnoreFile(baseURL string) error {
-	ignoreApiURL := fmt.Sprintf("%s/.ignorefiles", baseURL)
-	item, err := getGitHubFileInfo(ignoreApiURL)
-	if err != nil {
-		return fmt.Errorf("failed to get .gitignore file info: %v", err)
+	if projectLanguage == "" {
+		return nil
 	}
 
-	return downloadAndSaveFile(item.DownloadURL, filepath.Join(outputDirectory, ".gitignore"), overwriteExistingFiles)
+	ignoreApiURL := fmt.Sprintf("%s/.ignorefiles/%s/.gitignore", baseURL, projectLanguage)
+	return downloadFileFromGitHub(ignoreApiURL, filepath.Join(outputDirectory, ".gitignore"), overwriteExistingFiles)
 }
 
 func handleLicenseFile(baseURL string) error {
@@ -259,7 +263,16 @@ func handleVSCodeFiles(baseURL string) error {
 }
 
 func handleReleaserFiles(baseURL string) error {
-	releaserApiURL := fmt.Sprintf("%s/.releasers/%s/goreleaser.yaml", baseURL, projectLanguage)
+	if projectLanguage == "" {
+		return nil
+	}
+
+	releaseFile, err := getReleaseYamlByProjectLang()
+	if err != nil {
+		return err
+	}
+
+	releaserApiURL := fmt.Sprintf("%s/.releasers/%s/%s", baseURL, projectLanguage, releaseFile)
 	return downloadFileFromGitHub(releaserApiURL, filepath.Join(outputDirectory, "goreleaser.yaml"), overwriteExistingFiles)
 }
 
@@ -292,6 +305,7 @@ func downloadFileFromGitHub(apiURL, destPath string, overwrite bool) error {
 }
 
 func getGitHubFileInfo(apiURL string) (*GitHubItem, error) {
+	// BUG: errors are being overwritten with the stupid spinners
 	resp, err := http.Get(apiURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get file info from '%s': %v", apiURL, err)
@@ -322,6 +336,23 @@ func getGitHubFileInfo(apiURL string) (*GitHubItem, error) {
 	}
 
 	return &item, nil
+}
+
+func getReleaseYamlByProjectLang() (string, error) {
+	if projectLanguage == "" {
+		return "", nil
+	}
+
+	switch projectLanguage {
+	case "go":
+		return "goreleaser.yaml", nil
+	case "py":
+		return "pyreleaser.yaml", nil
+	case "js":
+		return "jsreleaser.yaml", nil
+	default:
+		return "", fmt.Errorf("unsupported project language: %s", projectLanguage)
+	}
 }
 
 func downloadAndSaveFile(url, destPath string, overwrite bool) error {
