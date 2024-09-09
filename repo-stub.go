@@ -66,7 +66,6 @@ func initFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&repoOwner, "owner", "o", "ondrovic", "Repository owner")
 	cmd.Flags().StringVarP(&repoName, "repo", "r", "vscode", "Repository name")
 	cmd.Flags().StringVarP(&branch, "branch", "b", "master", "Branch name")
-	// cmd.Flags().StringVarP(&outputDirectory, "output", "d", "", "Output directory")
 	cmd.Flags().BoolVarP(&includeMakeFile, "makefile", "m", false, "Does your project need a makefile?")
 	cmd.Flags().StringVarP(&projectLanguage, "project-language", "p", "go", "What language is your app?")
 	cmd.Flags().BoolVarP(&overwriteExistingFiles, "overwrite", "w", false, "Overwrite existing files?")
