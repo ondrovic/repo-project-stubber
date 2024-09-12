@@ -32,17 +32,22 @@ func CreateSpinner() (*yacspin.Spinner, error) {
 }
 
 func StopOnSignal(spinner *yacspin.Spinner) {
-	// ensure we stop the spinner before exiting, otherwise cursor will remain
-	// hidden and terminal will require a `reset`
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+
 	go func() {
 		<-sigCh
 
-		spinner.StopFailMessage("interrupted")
+		// Check if the spinner is running by using the Status() method
+		if spinner.Status() == yacspin.SpinnerRunning {
+			spinner.StopFailMessage("interrupted by user")
 
-		// ignoring error intentionally
-		_ = spinner.StopFail()
+			// handle the error if needed
+			if err := spinner.StopFail(); err != nil {
+				// log or handle the error if stopping fails
+				fmt.Println("Error stopping spinner:", err)
+			}
+		}
 
 		os.Exit(0)
 	}()

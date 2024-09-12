@@ -1,12 +1,10 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"github-project-template/internal/consts"
 	"github-project-template/internal/httpclient"
 	"github-project-template/internal/spinner"
-	"github-project-template/internal/types"
 	"io"
 	"net/http"
 	"os"
@@ -15,56 +13,7 @@ import (
 	"time"
 
 	"github.com/gookit/color"
-	// "github.com/gookit/color"
 )
-
-func FileDownloader(url, outputPath string, overwrite bool) error {
-
-	item, err := GetFileInfo(url)
-	if err != nil {
-		return fmt.Errorf("failed to get file info %s: %v", url, err)
-		// return err
-	}
-
-	return SaveFile(item.DownloadURL, outputPath, overwrite)
-}
-
-func GetFileInfo(url string) (*types.GitHubItem, error) {
-	resp, err := httpclient.Client.Get(url)
-	if err != nil {
-		return nil, err
-		// return nil, fmt.Errorf("failed to get file info from '%s': %v", url, err)
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get contents %s: HTTP status %d", url, resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-		// return nil, fmt.Errorf("failed to read response body: %v", err)
-	}
-
-	var items []types.GitHubItem
-	err = json.Unmarshal(body, &items)
-	if err == nil && len(items) > 0 {
-		// If it's an array, return the first item
-		return &items[0], nil
-	}
-
-	// If it's not an array, try to unmarshal as a single item
-	var item types.GitHubItem
-	err = json.Unmarshal(body, &item)
-	if err != nil {
-		return nil, err
-		// return nil, fmt.Errorf("failed to decode file info: %v", err)
-	}
-
-	return &item, nil
-}
 
 func SetColor(col color.Color, item interface{}) string {
 	return col.Sprintf("%v", item)
@@ -91,7 +40,7 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 	if _, err := os.Stat(outputPath); err == nil && !overwrite {
 		// s.StopMessage(fmt.Sprintf("Skipped %s in %s", SetColor(color.FgGreen, file), SetColor(color.FgLightCyan, dir)))
 		s.StopMessage(fmt.Sprintf("Skipped %s", SetColor(color.FgLightRed, file)))
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 		return nil
 	}
 
@@ -127,7 +76,7 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 		return fmt.Errorf("failed to write file '%s': %v", outputPath, err)
 	}
 
-	time.Sleep(1 * time.Second)
+	// time.Sleep(1 * time.Second)
 	// s.StopMessage(fmt.Sprintf("Created %s in %s", SetColor(color.FgLightGreen, file), SetColor(color.FgLightCyan, dir)))
 	s.StopMessage(fmt.Sprintf("Processed %s", SetColor(color.FgLightGreen, file)))
 
