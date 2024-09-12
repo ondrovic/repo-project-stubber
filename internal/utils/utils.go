@@ -33,14 +33,13 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 	defer s.Stop()
 
 	file := filepath.Base(outputPath)
-	// dir := filepath.Dir(outputPath)
+	dir := filepath.Dir(outputPath)
 
 	s.Message(fmt.Sprintf("Processing %s", SetColor(color.LightCyan, file)))
 
 	if _, err := os.Stat(outputPath); err == nil && !overwrite {
-		// s.StopMessage(fmt.Sprintf("Skipped %s in %s", SetColor(color.FgGreen, file), SetColor(color.FgLightCyan, dir)))
 		s.StopMessage(fmt.Sprintf("Skipped %s", SetColor(color.FgLightRed, file)))
-		time.Sleep(5 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 		return nil
 	}
 
@@ -59,7 +58,6 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 	if resp.StatusCode != http.StatusOK {
 		s.StopFailMessage(fmt.Sprintf("failed to get contents %s: HTTP status %d", url, resp.StatusCode))
 		return fmt.Errorf("failed to get contents %s: HTTP status %d", url, resp.StatusCode)
-		// return nil
 	}
 
 	out, err := os.Create(outputPath)
@@ -76,9 +74,8 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 		return fmt.Errorf("failed to write file '%s': %v", outputPath, err)
 	}
 
-	// time.Sleep(1 * time.Second)
-	// s.StopMessage(fmt.Sprintf("Created %s in %s", SetColor(color.FgLightGreen, file), SetColor(color.FgLightCyan, dir)))
-	s.StopMessage(fmt.Sprintf("Processed %s", SetColor(color.FgLightGreen, file)))
+	time.Sleep(500 * time.Millisecond)
+	s.StopMessage(fmt.Sprintf("Processed %s saved in %s", SetColor(color.FgLightGreen, file), SetColor(color.FgCyan, dir)))
 
 	return nil
 }
