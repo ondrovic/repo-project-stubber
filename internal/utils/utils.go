@@ -5,22 +5,26 @@ import (
 	"fmt"
 	"github-project-template/internal/consts"
 	"github-project-template/internal/httpclient"
+	"github-project-template/internal/spinner"
 	"github-project-template/internal/types"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/gookit/color"
+	// "github.com/gookit/color"
 )
 
 func FileDownloader(url, outputPath string, overwrite bool) error {
 
 	item, err := GetFileInfo(url)
 	if err != nil {
-		// return fmt.Errorf("failed to get file info %s: %v", url, err)
-		return err
+		return fmt.Errorf("failed to get file info %s: %v", url, err)
+		// return err
 	}
-	// TODO: do a choice if you want to overwrite, this will give you the ability to only overwrite certain files
 
 	return SaveFile(item.DownloadURL, outputPath, overwrite)
 }
@@ -62,22 +66,44 @@ func GetFileInfo(url string) (*types.GitHubItem, error) {
 	return &item, nil
 }
 
+// func SetColor(col color.Color, item string) string {
+// 	return col.Sprintf(item)
+// }
+
+func SetColor(col color.Color, item interface{}) string {
+	return col.Sprintf("%v", item)
+}
 func SaveFile(url, outputPath string, overwrite bool) error {
-	// todo: spinner here
+	s, err := spinner.CreateSpinner()
+	if err != nil {
+		return err
+	}
+
+	spinner.StopOnSignal(s)
+
+	if err := s.Start(); err != nil {
+		return err
+	}
+
+	defer s.Stop()
+
+	file := filepath.Base(outputPath)
+	// dir := filepath.Dir(outputPath)
+
+	s.Message(fmt.Sprintf("Processing %s", SetColor(color.LightCyan, file)))
+
 	if _, err := os.Stat(outputPath); err == nil && !overwrite {
-		// todo notify  user of skipping
-		fmt.Printf("Skipping '%s'\n", outputPath)
+		// s.StopMessage(fmt.Sprintf("Skipped %s in %s", SetColor(color.FgGreen, file), SetColor(color.FgLightCyan, dir)))
+		s.StopMessage(fmt.Sprintf("Skipped %s", SetColor(color.FgLightRed, file)))
+		time.Sleep(1 * time.Second)
 		return nil
 	}
 
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
-		// todo: notify user
-		// return err
+		s.StopFailMessage(fmt.Sprintf("failed to create directory structure for '%s': %v", outputPath, err))
 		return fmt.Errorf("failed to create directory structure for '%s': %v", outputPath, err)
 	}
 
-	// spinner
-	// resp, err := http.Get(url)
 	resp, err := httpclient.Client.Get(url)
 	if err != nil {
 		return err
@@ -86,22 +112,28 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		s.StopFailMessage(fmt.Sprintf("failed to get contents %s: HTTP status %d", url, resp.StatusCode))
 		return fmt.Errorf("failed to get contents %s: HTTP status %d", url, resp.StatusCode)
+		// return nil
 	}
 
 	out, err := os.Create(outputPath)
 	if err != nil {
+		s.StopFailMessage(fmt.Sprintf("failed to create file '%s': %v", outputPath, err))
 		return fmt.Errorf("failed to create file '%s': %v", outputPath, err)
-		// return err
 	}
 
 	defer out.Close()
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
+		s.StopFailMessage(fmt.Sprintf("failed to write file '%s': %v", outputPath, err))
 		return fmt.Errorf("failed to write file '%s': %v", outputPath, err)
-		// return err
 	}
+
+	time.Sleep(1 * time.Second)
+	// s.StopMessage(fmt.Sprintf("Created %s in %s", SetColor(color.FgLightGreen, file), SetColor(color.FgLightCyan, dir)))
+	s.StopMessage(fmt.Sprintf("Processed %s", SetColor(color.FgLightGreen, file)))
 
 	return nil
 }

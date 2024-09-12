@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github-project-template/internal/consts"
 	"github-project-template/internal/httpclient"
+
+	// "github-project-template/internal/spinner"
 	"github-project-template/internal/types"
 	"github-project-template/internal/utils"
 	"io"
@@ -12,6 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/gookit/color"
 )
 
 var (
@@ -19,8 +23,8 @@ var (
 )
 
 func getRepoContents(url, path, token string) ([]types.GitHubItem, error) {
-	// Initialize the global client with the token if it's not already initialized
-	if token != "" && httpclient.Client == nil {
+
+	if httpclient.Client == nil {
 		httpclient.InitClient(token)
 	}
 
@@ -32,31 +36,29 @@ func getRepoContents(url, path, token string) ([]types.GitHubItem, error) {
 	// Create a new request
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request %s: %v", url, err)
-	}
-
-	// Set the Authorization header
-	if token != "" {
-		tokenHeader := fmt.Sprintf("token %s", token)
-		req.Header.Set("Authorization", tokenHeader)
+		return nil, err
+		// return nil, fmt.Errorf("failed to create request %s: %v", url, err)
 	}
 
 	// Perform the request using the global client
 	resp, err := httpclient.Client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get contents from '%s': %v", url, err)
+		return nil, err
+		// return nil, fmt.Errorf("failed to get contents from '%s': %v", url, err)
 	}
 	defer resp.Body.Close()
 
 	// Check the response status code
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get contents %s: HTTP status %d", url, resp.StatusCode)
+		return nil, fmt.Errorf(": %s", utils.SetColor(color.FgLightRed, resp.Status))
+		// return nil, fmt.Errorf("failed to get contents %s: HTTP status %d", url, resp.StatusCode)
 	}
 
 	// Read the response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %v", err)
+		// return nil, fmt.Errorf("failed to read response body: %v", err)
+		return nil, err
 	}
 
 	// Try to unmarshal the body as an array
@@ -71,7 +73,8 @@ func getRepoContents(url, path, token string) ([]types.GitHubItem, error) {
 	var singleItem types.GitHubItem
 	err = json.Unmarshal(body, &singleItem)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode response %s: %v", url, err)
+		// return nil, fmt.Errorf("failed to decode response %s: %v", url, err)
+		return nil, err
 	}
 
 	return []types.GitHubItem{singleItem}, nil
@@ -84,12 +87,13 @@ func ProcessRepository(url, path string, opts types.CliFlags) error {
 
 	contents, err := getRepoContents(url, path, opts.GithubToken)
 	if err != nil {
-		return fmt.Errorf("error getting GitHub contents %s: %v", url, err)
+		return fmt.Errorf("%s %s %v", utils.SetColor(color.FgLightRed, "getting repo contents"), utils.SetColor(color.FgLightCyan, url), err)
 		// return err
 	}
 
 	if len(contents) == 0 {
-		return fmt.Errorf("no contents found: %s", path)
+		fmt.Println("no contents found")
+		return nil
 	}
 
 	for _, item := range contents {
@@ -99,12 +103,15 @@ func ProcessRepository(url, path string, opts types.CliFlags) error {
 			go func(item types.GitHubItem) {
 				defer wg.Done()
 				if err := handleFileTypeContent(item, opts.OutputDirectory, opts.OverwriteFiles); err != nil {
-					fmt.Printf("error handling %s file %s: %v\n", url, item.Path, err)
+					// fmt.Printf("error handling %s file %s: %v\n", url, item.Path, err)
+					// return err
+					fmt.Println(err)
 				}
 			}(item)
 		case consts.DIR_TYPE:
 			if err := handleDirectoryTypeContent(url, opts, item); err != nil {
-				fmt.Printf("error handling %s directory %s: %v\n", url, item.Path, err)
+				// fmt.Printf("error handling %s directory %s: %v\n", url, item.Path, err)
+				fmt.Println(err)
 			}
 		default:
 			return fmt.Errorf("unknown item.Type: %s found at %s", item.Type, item.Path)
