@@ -66,10 +66,6 @@ func GetFileInfo(url string) (*types.GitHubItem, error) {
 	return &item, nil
 }
 
-// func SetColor(col color.Color, item string) string {
-// 	return col.Sprintf(item)
-// }
-
 func SetColor(col color.Color, item interface{}) string {
 	return col.Sprintf("%v", item)
 }

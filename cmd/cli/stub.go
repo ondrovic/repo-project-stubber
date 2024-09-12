@@ -52,8 +52,12 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := os.MkdirAll(options.OutputDirectory, 0755); err != nil {
-		return err
+		fmt.Println(err)
 	}
 
-	return repository.ProcessRepository(baseUrl, "", options)
+	if err := repository.ProcessRepository(baseUrl, "", options); err != nil {
+		fmt.Println(err)
+	}
+
+	return nil
 }

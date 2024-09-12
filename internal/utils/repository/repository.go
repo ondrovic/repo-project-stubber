@@ -3,12 +3,6 @@ package repository
 import (
 	"encoding/json"
 	"fmt"
-	"github-project-template/internal/consts"
-	"github-project-template/internal/httpclient"
-
-	// "github-project-template/internal/spinner"
-	"github-project-template/internal/types"
-	"github-project-template/internal/utils"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -16,6 +10,11 @@ import (
 	"sync"
 
 	"github.com/gookit/color"
+
+	"github-project-template/internal/consts"
+	"github-project-template/internal/httpclient"
+	"github-project-template/internal/types"
+	"github-project-template/internal/utils"
 )
 
 var (
@@ -81,10 +80,6 @@ func getRepoContents(url, path, token string) ([]types.GitHubItem, error) {
 }
 
 func ProcessRepository(url, path string, opts types.CliFlags) error {
-	if opts.OutputDirectory == "" {
-		return fmt.Errorf("output directory cannot be empty")
-	}
-
 	contents, err := getRepoContents(url, path, opts.GithubToken)
 	if err != nil {
 		return fmt.Errorf("%s %s %v", utils.SetColor(color.FgLightRed, "getting repo contents"), utils.SetColor(color.FgLightCyan, url), err)
@@ -126,6 +121,7 @@ func handleFileTypeContent(item types.GitHubItem, outputPath string, overwrite b
 	case consts.README, consts.LICENSE, consts.GIT_IGNORE, consts.GIT_KEEP, consts.TODO:
 		return nil
 	default:
+		// return nil
 		return utils.SaveFile(item.DownloadURL, filepath.Join(outputPath, item.Path), overwrite)
 	}
 }
@@ -151,44 +147,22 @@ func handleDirectoryTypeContent(url string, opts types.CliFlags, item types.GitH
 	case consts.WORKFLOW_FLIES:
 		return handleWorkflowFiles(url, opts.ProjectLanguage, opts.OutputDirectory, opts.GithubToken, opts.OverwriteFiles)
 	default:
+		// TODO: fix the duplicates
 		return ProcessRepository(url, item.Path, opts)
 	}
-
 }
 
 func handleIgnoreFiles(url, projectLanguage, outputPath string, overwrite bool) error {
-	if outputPath == "" {
-		return fmt.Errorf("outputPath cannot be empty")
-	}
-
-	if projectLanguage == "" {
-		return nil
-	}
-
 	uri := fmt.Sprintf("%s/%s/%s/%s", url, consts.IGNORE_FILES, projectLanguage, consts.GIT_IGNORE)
-
 	return utils.FileDownloader(uri, filepath.Join(outputPath, consts.GIT_IGNORE), overwrite)
 }
 
 func handleLicenseFiles(url, licenseType, outputPath string, overwrite bool) error {
-	if outputPath == "" {
-		return fmt.Errorf("outputPath cannot be empty")
-	}
-
-	if licenseType == "" {
-		return nil
-	}
-
 	url = fmt.Sprintf("%s/%s/%s/%s", url, consts.LICENSE_FILES, licenseType, consts.LICENSE)
-
 	return utils.FileDownloader(url, filepath.Join(outputPath, consts.LICENSE), overwrite)
 }
 
 func handleMakeFiles(url, projectLanguage, outputPath string, overwrite, includeMakefile bool) error {
-	if outputPath == "" {
-		return fmt.Errorf("outputPath cannot be empty")
-	}
-
 	if !includeMakefile {
 		return nil
 	}
@@ -199,88 +173,43 @@ func handleMakeFiles(url, projectLanguage, outputPath string, overwrite, include
 }
 
 func handleReadmeFiles(url, licenseType, outputPath string, overwrite bool) error {
-	if outputPath == "" {
-		return fmt.Errorf("outputPath cannot be empty")
-	}
-
-	if licenseType == "" {
-		return nil
-	}
-
 	url = fmt.Sprintf("%s/%s/%s/%s", url, consts.README_FILES, licenseType, consts.README)
-
 	return utils.FileDownloader(url, filepath.Join(outputPath, consts.README), overwrite)
 }
 
 func handleTodoFiles(url, projectLanguage, outputPath string, overwrite bool) error {
-	if outputPath == "" {
-		return fmt.Errorf("outputPath cannot be empty")
-	}
-
-	if projectLanguage == "" {
-		return nil
-	}
-
 	url = fmt.Sprintf("%s/%s/%s/%s", url, consts.TODO_FILES, projectLanguage, consts.TODO)
-
 	return utils.FileDownloader(url, filepath.Join(outputPath, consts.TODO), overwrite)
 }
 
 func handleVSCodeFiles(url, outputPath string, overwrite bool) error {
-
-	if outputPath == "" {
-		return fmt.Errorf("output path cannot be empty")
-	}
-
 	url = fmt.Sprintf("%s/%s/commands.json", url, consts.VSCODE_FILES)
-
 	return utils.FileDownloader(url, filepath.Join(outputPath, consts.VSCODE, "commands.json"), overwrite)
 }
 
 func handleVersionFiles(url, projectLanguage, outputPath string, overwrite bool) error {
-	if outputPath == "" {
-		return fmt.Errorf("outputPath cannot be empty")
-	}
-
-	if projectLanguage == "" {
-		return nil
-	}
-
 	if versionFile, err := utils.GetVersionFile(projectLanguage); err != nil {
 		return err
 	} else if versionFile == "" {
-		return nil
+		return fmt.Errorf("no version file for %s", projectLanguage)
 	} else {
 		url = fmt.Sprintf("%s/%s/%s/%s", url, consts.VERSION_FILES, projectLanguage, versionFile)
-
 		return utils.FileDownloader(url, filepath.Join(outputPath, versionFile), overwrite)
 	}
 }
 
 func handleReleaseFiles(url, projectLanguage, outputPath string, overwrite bool) error {
-	if outputPath == "" {
-		return fmt.Errorf("outputPath cannot be empty")
-	}
-
-	releaseFile, err := utils.GetReleaseFile(projectLanguage)
-	if err != nil {
+	if releaseFile, err := utils.GetReleaseFile(projectLanguage); err != nil {
 		return err
+	} else if releaseFile == "" {
+		return fmt.Errorf("no release file for %s", projectLanguage)
+	} else {
+		url = fmt.Sprintf("%s/%s/%s/%s", url, consts.RELEASE_FILES, projectLanguage, releaseFile)
+		return utils.FileDownloader(url, filepath.Join(outputPath, fmt.Sprintf(".%s", releaseFile)), overwrite)
 	}
-
-	url = fmt.Sprintf("%s/%s/%s/%s", url, consts.RELEASE_FILES, projectLanguage, releaseFile)
-
-	return utils.FileDownloader(url, filepath.Join(outputPath, releaseFile), overwrite)
 }
 
 func handleWorkflowFiles(url, projectLanguage, outputPath, token string, overwrite bool) error {
-	if outputPath == "" {
-		return fmt.Errorf("outputPath cannot be empty")
-	}
-
-	if projectLanguage == "" {
-		return nil
-	}
-
 	url = fmt.Sprintf("%s/%s/%s", url, consts.WORKFLOW_FLIES, projectLanguage)
 
 	contents, err := getRepoContents(url, "", token)
@@ -301,4 +230,3 @@ func handleWorkflowFiles(url, projectLanguage, outputPath, token string, overwri
 }
 
 // TODO: move all if <items> == "" to validation return type func
-// TODO: if the files come back as == "" then should exit

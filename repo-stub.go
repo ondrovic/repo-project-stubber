@@ -2,8 +2,9 @@ package main
 
 import (
 	"github-project-template/cmd/cli"
-	sCli "github.com/ondrovic/common/utils/cli"
 	"runtime"
+
+	sCli "github.com/ondrovic/common/utils/cli"
 )
 
 func main() {
