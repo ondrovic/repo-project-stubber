@@ -29,6 +29,9 @@ const (
 	// DIR_TYPE represents a directory type identifier.
 	DIR_TYPE = "dir"
 
+	// EMPTY_STRING represent an empty string
+	EMPTY_STRING = ""
+
 	// FILE_TYPE represents a file type identifier.
 	FILE_TYPE = "file"
 

@@ -28,7 +28,7 @@ func getRepoContents(url, path, token string) ([]types.GitHubItem, error) {
 	}
 
 	// Append the path to the URL if specified
-	if path != "" {
+	if path != consts.EMPTY_STRING {
 		url = fmt.Sprintf("%s/%s", url, path)
 	}
 
@@ -140,7 +140,7 @@ func handleDirectoryTypeContent(url string, opts types.CliFlags, item types.GitH
 	case consts.RELEASE_FILES:
 		return handleReleaseFiles(url, opts.ProjectLanguage, opts.OutputDirectory, opts.OverwriteFiles)
 	case consts.VERSION_FILES:
-		return handleVersionFiles(url, opts.ProjectLanguage, opts.OutputDirectory, opts.OverwriteFiles)
+		return handleVersionFiles(url, opts.ProjectLanguage, opts.OutputDirectory, opts.OverwriteFiles, opts.IncludeVersionFile)
 	case consts.VSCODE_FILES:
 		return handleVSCodeFiles(url, opts.OutputDirectory, opts.OverwriteFiles)
 	case consts.WORKFLOW_FLIES:
@@ -219,13 +219,15 @@ func handleVSCodeFiles(url, outputPath string, overwrite bool) error {
 	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.VSCODE, "commands.json"), overwrite)
 }
 
-func handleVersionFiles(url, projectLanguage, outputPath string, overwrite bool) error {
-	// Get the version file for the specified language
+func handleVersionFiles(url, projectLanguage, outputPath string, overwrite, includeVersionFile bool) error {
+	if !includeVersionFile {
+		return nil
+	}
 	versionFile, err := utils.GetVersionFile(projectLanguage)
 	if err != nil {
 		return err
 	}
-	if versionFile == "" {
+	if versionFile == consts.EMPTY_STRING {
 		return fmt.Errorf("no version file for %s", projectLanguage)
 	}
 
@@ -248,7 +250,7 @@ func handleReleaseFiles(url, projectLanguage, outputPath string, overwrite bool)
 	if err != nil {
 		return err
 	}
-	if releaseFile == "" {
+	if releaseFile == consts.EMPTY_STRING {
 		return fmt.Errorf("no release file for %s", projectLanguage)
 	}
 
@@ -270,7 +272,7 @@ func handleWorkflowFiles(url, projectLanguage, outputPath, token string, overwri
 	url = fmt.Sprintf("%s/%s/%s", url, consts.WORKFLOW_FLIES, projectLanguage)
 
 	// Fetch the contents of the repository
-	contents, err := getRepoContents(url, "", token)
+	contents, err := getRepoContents(url, consts.EMPTY_STRING, token)
 	if err != nil {
 		return err
 	}

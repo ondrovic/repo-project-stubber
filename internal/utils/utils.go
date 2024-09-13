@@ -24,20 +24,20 @@ func SetColor(col color.Color, item interface{}) string {
 func GrabDownloadUrl(url string) (string, error) {
 	resp, err := httpclient.Client.Get(url)
 	if err != nil {
-		return "", err
+		return consts.EMPTY_STRING, err
 	}
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return consts.EMPTY_STRING, err
 	}
 
 	var data types.GitHubResponse
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return "", err
+		return consts.EMPTY_STRING, err
 	}
 
 	return data.DownloadURL, nil
@@ -106,27 +106,27 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 }
 
 func GetReleaseFile(projectLanguage string) (string, error) {
-	if projectLanguage == "" {
-		return "", nil
+	if projectLanguage == consts.EMPTY_STRING {
+		return consts.EMPTY_STRING, nil
 	}
 
 	switch strings.ToLower(projectLanguage) {
 	case consts.GO_LANG:
 		return consts.GORELEASER, nil
 	default:
-		return "", fmt.Errorf("release file for projectLanguage: %s hasn't been implemented yet", projectLanguage)
+		return consts.EMPTY_STRING, fmt.Errorf("release file for projectLanguage: %s hasn't been implemented yet", projectLanguage)
 	}
 }
 
 func GetVersionFile(projectLanguage string) (string, error) {
-	if projectLanguage == "" {
-		return "", nil
+	if projectLanguage == consts.EMPTY_STRING {
+		return consts.EMPTY_STRING, nil
 	}
 
 	switch strings.ToLower(projectLanguage) {
 	case consts.GO_LANG:
 		return consts.VERSION_GO, nil
 	default:
-		return "", fmt.Errorf("version file for projectLanguage: %s hasn't been implemented yet", projectLanguage)
+		return consts.EMPTY_STRING, fmt.Errorf("version file for projectLanguage: %s hasn't been implemented yet", projectLanguage)
 	}
 }

@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"github-project-template/internal/consts"
 	"net/http"
 )
 
@@ -25,7 +26,7 @@ type transportWithAuth struct {
 
 // RoundTrip adds the Authorization header if authToken is not empty.
 func (t *transportWithAuth) RoundTrip(req *http.Request) (*http.Response, error) {
-	if t.authToken != "" {
+	if t.authToken != consts.EMPTY_STRING {
 		req.Header.Set("Authorization", "token "+t.authToken)
 	}
 	return t.rt.RoundTrip(req)

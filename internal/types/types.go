@@ -12,13 +12,14 @@ type GitHubItem struct {
 }
 
 type CliFlags struct {
-	BranchName      string
-	IncludeMakefile bool
-	LicenseType     string
-	OutputDirectory string
-	OverwriteFiles  bool
-	ProjectLanguage string
-	GithubToken     string
-	RepoOwner       string
-	RepoName        string
+	BranchName         string
+	IncludeMakefile    bool
+	IncludeVersionFile bool
+	LicenseType        string
+	OutputDirectory    string
+	OverwriteFiles     bool
+	ProjectLanguage    string
+	GithubToken        string
+	RepoOwner          string
+	RepoName           string
 }

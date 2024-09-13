@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github-project-template/internal/consts"
 	"github-project-template/internal/types"
 	"github-project-template/internal/utils/repository"
 	"os"
@@ -36,11 +37,12 @@ func initFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&options.RepoName, "repo-name", "r", "vscode", "Name of the repository")
 	cmd.Flags().StringVarP(&options.RepoOwner, "repo-owner", "o", "ondrovic", "Owner of the repository")
 	cmd.Flags().StringVarP(&options.BranchName, "branch-name", "b", "master", "Branch name you wish to pull from")
-	cmd.Flags().StringVarP(&options.GithubToken, "github-token", "t", "", "Github API token")
+	cmd.Flags().StringVarP(&options.GithubToken, "github-token", "t", consts.EMPTY_STRING, "Github API token")
 	cmd.Flags().StringVarP(&options.ProjectLanguage, "project-language", "p", "go", "What language is your app in")
 	cmd.Flags().StringVarP(&options.LicenseType, "license-type", "l", "mit", "What license are you using")
 	cmd.Flags().BoolVarP(&options.IncludeMakefile, "include-makefile", "m", false, "Include a Makefile")
-	cmd.Flags().BoolVarP(&options.OverwriteFiles, "overwrite-files", "w", false, "Include a Makefile")
+	cmd.Flags().BoolVarP(&options.IncludeVersionFile, "include-version-file", "v", false, "Include a version file")
+	cmd.Flags().BoolVarP(&options.OverwriteFiles, "overwrite-files", "w", false, "Overwrite existing files")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -55,7 +57,7 @@ func run(cmd *cobra.Command, args []string) error {
 		fmt.Println(err)
 	}
 
-	if err := repository.ProcessRepository(baseUrl, "", options); err != nil {
+	if err := repository.ProcessRepository(baseUrl, consts.EMPTY_STRING, options); err != nil {
 		fmt.Println(err)
 	}
 

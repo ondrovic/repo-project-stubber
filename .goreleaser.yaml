@@ -3,7 +3,8 @@ version: 2
 project_name: repo-stub
 
 env:
- - GO_MAIN_PATH=./repo-stub.go
+ - GO_MAIN_PATH=repo-stub.go
+
 
 before:
   hooks:
@@ -27,7 +28,7 @@ builds:
       - -X go.szostok.io/version.buildDate={{.Date}}
       - -X go.szostok.io/version.commit={{.FullCommit}}
       - -X go.szostok.io/version.commitDate={{.CommitDate}}
-      - -X go.szostok.io/version.dirtyBuild=false
+      - -X go.szostok.io/version.dirtyBuild={{.IsGitDirty}}
 
   - id: linux
     main: '{{ .Env.GO_MAIN_PATH }}'
@@ -43,7 +44,7 @@ builds:
       - -X go.szostok.io/version.buildDate={{.Date}}
       - -X go.szostok.io/version.commit={{.FullCommit}}
       - -X go.szostok.io/version.commitDate={{.CommitDate}}
-      - -X go.szostok.io/version.dirtyBuild=false
+      - -X go.szostok.io/version.dirtyBuild={{.IsGitDirty}}
 
   - id: macos
     main: '{{ .Env.GO_MAIN_PATH }}'
@@ -59,7 +60,7 @@ builds:
       - -X go.szostok.io/version.buildDate={{.Date}}
       - -X go.szostok.io/version.commit={{.FullCommit}}
       - -X go.szostok.io/version.commitDate={{.CommitDate}}
-      - -X go.szostok.io/version.dirtyBuild=false
+      - -X go.szostok.io/version.dirtyBuild={{.IsGitDirty}}
 
 archives:
   - format: tar.gz
