@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"github-project-template/internal/consts"
 	"github-project-template/internal/httpclient"
 	"github-project-template/internal/spinner"
+	"github-project-template/internal/types"
 	"io"
 	"net/http"
 	"os"
@@ -18,6 +20,29 @@ import (
 func SetColor(col color.Color, item interface{}) string {
 	return col.Sprintf("%v", item)
 }
+
+func GrabDownloadUrl(url string) (string, error) {
+	resp, err := httpclient.Client.Get(url)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var data types.GitHubResponse
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return "", err
+	}
+
+	return data.DownloadURL, nil
+}
+
 func SaveFile(url, outputPath string, overwrite bool) error {
 	s, err := spinner.CreateSpinner()
 	if err != nil {

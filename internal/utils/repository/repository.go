@@ -121,7 +121,6 @@ func handleFileTypeContent(item types.GitHubItem, outputPath string, overwrite b
 	case consts.README, consts.LICENSE, consts.GIT_IGNORE, consts.GIT_KEEP, consts.TODO:
 		return nil
 	default:
-		// return nil
 		return utils.SaveFile(item.DownloadURL, filepath.Join(outputPath, item.Path), overwrite)
 	}
 }
@@ -147,88 +146,143 @@ func handleDirectoryTypeContent(url string, opts types.CliFlags, item types.GitH
 	case consts.WORKFLOW_FLIES:
 		return handleWorkflowFiles(url, opts.ProjectLanguage, opts.OutputDirectory, opts.GithubToken, opts.OverwriteFiles)
 	default:
-		// TODO: fix the duplicates
 		return ProcessRepository(url, item.Path, opts)
 	}
 }
 
 func handleIgnoreFiles(url, projectLanguage, outputPath string, overwrite bool) error {
-	url = fmt.Sprintf("%s/%s/%s/%s", url, consts.IGNORE_FILES, projectLanguage, consts.GIT_IGNORE)
+	contentUrl := fmt.Sprintf("%s/%s/%s/%s", url, consts.IGNORE_FILES, projectLanguage, consts.GIT_IGNORE)
 
-	return utils.SaveFile(url, filepath.Join(outputPath, consts.GIT_IGNORE), overwrite)
-	// return utils.FileDownloader(uri, filepath.Join(outputPath, consts.GIT_IGNORE), overwrite)
+	downloadUrl, err := utils.GrabDownloadUrl(contentUrl)
+	if err != nil {
+		return err
+	}
+
+	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.GIT_IGNORE), overwrite)
 }
 
 func handleLicenseFiles(url, licenseType, outputPath string, overwrite bool) error {
-	url = fmt.Sprintf("%s/%s/%s/%s", url, consts.LICENSE_FILES, licenseType, consts.LICENSE)
-	return utils.SaveFile(url, filepath.Join(outputPath, consts.LICENSE), overwrite)
-	// return utils.FileDownloader(url, filepath.Join(outputPath, consts.LICENSE), overwrite)
+	contentUrl := fmt.Sprintf("%s/%s/%s/%s", url, consts.LICENSE_FILES, licenseType, consts.LICENSE)
+
+	downloadUrl, err := utils.GrabDownloadUrl(contentUrl)
+	if err != nil {
+		return err
+	}
+
+	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.LICENSE), overwrite)
 }
 
 func handleMakeFiles(url, projectLanguage, outputPath string, overwrite, includeMakefile bool) error {
 	if !includeMakefile {
 		return nil
 	}
+	contentUrl := fmt.Sprintf("%s/%s/%s/%s", url, consts.MAKE_FILES, projectLanguage, consts.MAKEFILE)
 
-	url = fmt.Sprintf("%s/%s/%s/%s", url, consts.MAKE_FILES, projectLanguage, consts.MAKEFILE)
-	return utils.SaveFile(url, filepath.Join(outputPath, consts.MAKEFILE), overwrite)
-	// return utils.FileDownloader(url, filepath.Join(outputPath, consts.MAKEFILE), overwrite)
+	downloadUrl, err := utils.GrabDownloadUrl(contentUrl)
+	if err != nil {
+		return err
+	}
+
+	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.MAKEFILE), overwrite)
 }
 
 func handleReadmeFiles(url, licenseType, outputPath string, overwrite bool) error {
-	url = fmt.Sprintf("%s/%s/%s/%s", url, consts.README_FILES, licenseType, consts.README)
-	return utils.SaveFile(url, filepath.Join(outputPath, consts.README), overwrite)
-	//return utils.FileDownloader(url, filepath.Join(outputPath, consts.README), overwrite)
+	contentUrl := fmt.Sprintf("%s/%s/%s/%s", url, consts.README_FILES, licenseType, consts.README)
+
+	downloadUrl, err := utils.GrabDownloadUrl(contentUrl)
+	if err != nil {
+		return err
+	}
+
+	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.README), overwrite)
 }
 
 func handleTodoFiles(url, projectLanguage, outputPath string, overwrite bool) error {
-	url = fmt.Sprintf("%s/%s/%s/%s", url, consts.TODO_FILES, projectLanguage, consts.TODO)
-	return utils.SaveFile(url, filepath.Join(outputPath, consts.TODO), overwrite)
-	// return utils.FileDownloader(url, filepath.Join(outputPath, consts.TODO), overwrite)
+	contentUrl := fmt.Sprintf("%s/%s/%s/%s", url, consts.TODO_FILES, projectLanguage, consts.TODO)
+
+	downloadUrl, err := utils.GrabDownloadUrl(contentUrl)
+	if err != nil {
+		return err
+	}
+
+	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.TODO), overwrite)
 }
 
 func handleVSCodeFiles(url, outputPath string, overwrite bool) error {
-	url = fmt.Sprintf("%s/%s/commands.json", url, consts.VSCODE_FILES)
-	return utils.SaveFile(url, filepath.Join(outputPath, consts.VSCODE, "commands.json"), overwrite)
-	// return utils.FileDownloader(url, filepath.Join(outputPath, consts.VSCODE, "commands.json"), overwrite)
+	contentUrl := fmt.Sprintf("%s/%s/commands.json", url, consts.VSCODE_FILES)
+
+	downloadUrl, err := utils.GrabDownloadUrl(contentUrl)
+	if err != nil {
+		return err
+	}
+
+	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.VSCODE, "commands.json"), overwrite)
 }
 
 func handleVersionFiles(url, projectLanguage, outputPath string, overwrite bool) error {
-	if versionFile, err := utils.GetVersionFile(projectLanguage); err != nil {
+	// Get the version file for the specified language
+	versionFile, err := utils.GetVersionFile(projectLanguage)
+	if err != nil {
 		return err
-	} else if versionFile == "" {
-		return fmt.Errorf("no version file for %s", projectLanguage)
-	} else {
-		url = fmt.Sprintf("%s/%s/%s/%s", url, consts.VERSION_FILES, projectLanguage, versionFile)
-		return utils.SaveFile(url, filepath.Join(outputPath, versionFile), overwrite)
-		// return utils.FileDownloader(url, filepath.Join(outputPath, versionFile), overwrite)
 	}
+	if versionFile == "" {
+		return fmt.Errorf("no version file for %s", projectLanguage)
+	}
+
+	// Construct the content URL
+	contentUrl := fmt.Sprintf("%s/%s/%s/%s", url, consts.VERSION_FILES, projectLanguage, versionFile)
+
+	// Get the download URL
+	downloadUrl, err := utils.GrabDownloadUrl(contentUrl)
+	if err != nil {
+		return err
+	}
+
+	// Save the file
+	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, versionFile), overwrite)
 }
 
 func handleReleaseFiles(url, projectLanguage, outputPath string, overwrite bool) error {
-	if releaseFile, err := utils.GetReleaseFile(projectLanguage); err != nil {
+	// Get the release file for the specified language
+	releaseFile, err := utils.GetReleaseFile(projectLanguage)
+	if err != nil {
 		return err
-	} else if releaseFile == "" {
-		return fmt.Errorf("no release file for %s", projectLanguage)
-	} else {
-		url = fmt.Sprintf("%s/%s/%s/%s", url, consts.RELEASE_FILES, projectLanguage, releaseFile)
-		return utils.SaveFile(url, filepath.Join(outputPath, fmt.Sprintf(".%s", releaseFile)), overwrite)
-		// return utils.FileDownloader(url, filepath.Join(outputPath, fmt.Sprintf(".%s", releaseFile)), overwrite)
 	}
+	if releaseFile == "" {
+		return fmt.Errorf("no release file for %s", projectLanguage)
+	}
+
+	// Construct the content URL
+	contentUrl := fmt.Sprintf("%s/%s/%s/%s", url, consts.RELEASE_FILES, projectLanguage, releaseFile)
+
+	// Get the download URL
+	downloadUrl, err := utils.GrabDownloadUrl(contentUrl)
+	if err != nil {
+		return err
+	}
+
+	// Save the file
+	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, fmt.Sprintf(".%s", releaseFile)), overwrite)
 }
 
 func handleWorkflowFiles(url, projectLanguage, outputPath, token string, overwrite bool) error {
+	// Build the initial URL for workflow files
 	url = fmt.Sprintf("%s/%s/%s", url, consts.WORKFLOW_FLIES, projectLanguage)
 
+	// Fetch the contents of the repository
 	contents, err := getRepoContents(url, "", token)
 	if err != nil {
 		return err
 	}
 
+	// Iterate through the contents
 	for _, item := range contents {
 		if item.Type == consts.FILE_TYPE && strings.HasSuffix(item.Name, consts.YML) {
-			outputPath = filepath.Join(outputPath, consts.GIT_HUB, consts.WORKFLOW, item.Name)
-			if err := utils.SaveFile(item.DownloadURL, outputPath, overwrite); err != nil {
+			// Join the output path correctly for each file
+			fileOutputPath := filepath.Join(outputPath, consts.GIT_HUB, consts.WORKFLOW, item.Name)
+
+			// Save the file
+			if err := utils.SaveFile(item.DownloadURL, fileOutputPath, overwrite); err != nil {
 				return err
 			}
 		}

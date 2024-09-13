@@ -1,5 +1,9 @@
 package types
 
+type GitHubResponse struct {
+	DownloadURL string `json:"download_url"`
+}
+
 type GitHubItem struct {
 	Type        string `json:"type"`
 	Name        string `json:"name"`
