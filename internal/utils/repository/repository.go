@@ -21,6 +21,7 @@ var (
 	wg sync.WaitGroup
 )
 
+// getRepoContents: Retrieves the contents of a GitHub repository based on the provided URL and path, using a GitHub token for authentication.
 func getRepoContents(url, path, token string) ([]types.GitHubItem, error) {
 
 	if httpclient.Client == nil {
@@ -79,6 +80,7 @@ func getRepoContents(url, path, token string) ([]types.GitHubItem, error) {
 	return []types.GitHubItem{singleItem}, nil
 }
 
+// ProcessRepository: Processes the contents of a repository by handling files and directories according to their types and options passed from the CLI.
 func ProcessRepository(url, path string, opts types.CliFlags) error {
 	contents, err := getRepoContents(url, path, opts.GithubToken)
 	if err != nil {
@@ -116,15 +118,18 @@ func ProcessRepository(url, path string, opts types.CliFlags) error {
 	return nil
 }
 
+// handleFileTypeContent: Handles the processing of file-type contents by saving files based on the item’s name and provided options.
 func handleFileTypeContent(item types.GitHubItem, outputPath string, overwrite bool) error {
 	switch item.Name {
 	case consts.README, consts.LICENSE, consts.GIT_IGNORE, consts.GIT_KEEP, consts.TODO:
+		// skip these they get handled in their relative funcs below
 		return nil
 	default:
 		return utils.SaveFile(item.DownloadURL, filepath.Join(outputPath, item.Path), overwrite)
 	}
 }
 
+// handleDirectoryTypeContent: Manages the processing of directory-type contents, calling the appropriate handler functions for specific directory types.
 func handleDirectoryTypeContent(url string, opts types.CliFlags, item types.GitHubItem) error {
 	switch item.Name {
 	case consts.IGNORE_FILES:
@@ -150,6 +155,7 @@ func handleDirectoryTypeContent(url string, opts types.CliFlags, item types.GitH
 	}
 }
 
+// handleIgnoreFiles: Processes and saves .gitignore files based on the project language.
 func handleIgnoreFiles(url, projectLanguage, outputPath string, overwrite bool) error {
 	contentUrl := fmt.Sprintf("%s/%s/%s/%s", url, consts.IGNORE_FILES, projectLanguage, consts.GIT_IGNORE)
 
@@ -161,6 +167,7 @@ func handleIgnoreFiles(url, projectLanguage, outputPath string, overwrite bool) 
 	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.GIT_IGNORE), overwrite)
 }
 
+// handleLicenseFiles: Processes and saves license files based on the license type.
 func handleLicenseFiles(url, licenseType, outputPath string, overwrite bool) error {
 	contentUrl := fmt.Sprintf("%s/%s/%s/%s", url, consts.LICENSE_FILES, licenseType, consts.LICENSE)
 
@@ -172,6 +179,7 @@ func handleLicenseFiles(url, licenseType, outputPath string, overwrite bool) err
 	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.LICENSE), overwrite)
 }
 
+// handleMakeFiles: Processes and saves Makefiles if the includeMakefile option is enabled.
 func handleMakeFiles(url, projectLanguage, outputPath string, overwrite, includeMakefile bool) error {
 	if !includeMakefile {
 		return nil
@@ -186,6 +194,7 @@ func handleMakeFiles(url, projectLanguage, outputPath string, overwrite, include
 	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.MAKEFILE), overwrite)
 }
 
+// handleReadmeFiles: Processes and saves README files based on the license type.
 func handleReadmeFiles(url, licenseType, outputPath string, overwrite bool) error {
 	contentUrl := fmt.Sprintf("%s/%s/%s/%s", url, consts.README_FILES, licenseType, consts.README)
 
@@ -197,6 +206,7 @@ func handleReadmeFiles(url, licenseType, outputPath string, overwrite bool) erro
 	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.README), overwrite)
 }
 
+// handleTodoFiles: Processes and saves TODO files based on the project language.
 func handleTodoFiles(url, projectLanguage, outputPath string, overwrite bool) error {
 	contentUrl := fmt.Sprintf("%s/%s/%s/%s", url, consts.TODO_FILES, projectLanguage, consts.TODO)
 
@@ -208,6 +218,7 @@ func handleTodoFiles(url, projectLanguage, outputPath string, overwrite bool) er
 	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.TODO), overwrite)
 }
 
+// handleVSCodeFiles: Processes and saves VSCode configuration files (like commands.json).
 func handleVSCodeFiles(url, outputPath string, overwrite bool) error {
 	contentUrl := fmt.Sprintf("%s/%s/commands.json", url, consts.VSCODE_FILES)
 
@@ -219,6 +230,7 @@ func handleVSCodeFiles(url, outputPath string, overwrite bool) error {
 	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, consts.VSCODE, "commands.json"), overwrite)
 }
 
+// handleVersionFiles: Processes and saves version files if the includeVersionFile option is enabled, based on the project language.
 func handleVersionFiles(url, projectLanguage, outputPath string, overwrite, includeVersionFile bool) error {
 	if !includeVersionFile {
 		return nil
@@ -244,6 +256,7 @@ func handleVersionFiles(url, projectLanguage, outputPath string, overwrite, incl
 	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, versionFile), overwrite)
 }
 
+// handleReleaseFiles: Processes and saves release files for the specified project language.
 func handleReleaseFiles(url, projectLanguage, outputPath string, overwrite bool) error {
 	// Get the release file for the specified language
 	releaseFile, err := utils.GetReleaseFile(projectLanguage)
@@ -267,6 +280,7 @@ func handleReleaseFiles(url, projectLanguage, outputPath string, overwrite bool)
 	return utils.SaveFile(downloadUrl, filepath.Join(outputPath, fmt.Sprintf(".%s", releaseFile)), overwrite)
 }
 
+// handleWorkflowFiles: Processes and saves GitHub workflow YAML files for the project language in the appropriate directory.
 func handleWorkflowFiles(url, projectLanguage, outputPath, token string, overwrite bool) error {
 	// Build the initial URL for workflow files
 	url = fmt.Sprintf("%s/%s/%s", url, consts.WORKFLOW_FLIES, projectLanguage)

@@ -12,11 +12,16 @@ import (
 )
 
 var (
+	// options holds the CLI flags provided by the user.
 	options = types.CliFlags{}
+	// stubCmd represents the "stub" command for the CLI.
 	stubCmd = &cobra.Command{}
+	// baseUrl is the GitHub API base URL used to access repository contents.
 	baseUrl string
 )
 
+// init initializes the stub command and its flags, binds them to Viper, and
+// sets the baseUrl for the GitHub repository API call.
 func init() {
 	stubCmd = &cobra.Command{
 		Use:   "stub <output-directory> [flags]",
@@ -33,6 +38,8 @@ func init() {
 	baseUrl = fmt.Sprintf("https://api.github.com/repos/%s/%s/contents", options.RepoOwner, options.RepoName)
 }
 
+// initFlags initializes and sets the flags for the stub command, allowing the user
+// to specify repository name, owner, branch, and other parameters through the CLI.
 func initFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&options.RepoName, "repo-name", "r", "vscode", "Name of the repository")
 	cmd.Flags().StringVarP(&options.RepoOwner, "repo-owner", "o", "ondrovic", "Owner of the repository")
@@ -45,6 +52,9 @@ func initFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVarP(&options.OverwriteFiles, "overwrite-files", "w", false, "Overwrite existing files")
 }
 
+// run is the main logic for the stub command. It creates the output directory
+// and processes the repository by pulling contents from the GitHub API.
+// It handles errors such as failed directory creation or repository processing.
 func run(cmd *cobra.Command, args []string) error {
 
 	options.OutputDirectory = args[0]

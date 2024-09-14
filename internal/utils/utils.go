@@ -17,10 +17,12 @@ import (
 	"github.com/gookit/color"
 )
 
+// SetColor: Formats the given item as a string and applies the specified color to the output.
 func SetColor(col color.Color, item interface{}) string {
 	return col.Sprintf("%v", item)
 }
 
+// GrabDownloadUrl: Retrieves the download URL from a given API URL by making an HTTP GET request and parsing the response body.
 func GrabDownloadUrl(url string) (string, error) {
 	resp, err := httpclient.Client.Get(url)
 	if err != nil {
@@ -43,6 +45,7 @@ func GrabDownloadUrl(url string) (string, error) {
 	return data.DownloadURL, nil
 }
 
+// SaveFile: Downloads a file from the specified URL and saves it to the provided output path. It creates any necessary directories, handles overwriting existing files, and uses a spinner for user feedback.
 func SaveFile(url, outputPath string, overwrite bool) error {
 	s, err := spinner.CreateSpinner()
 	if err != nil {
@@ -105,6 +108,7 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 	return nil
 }
 
+// GetReleaseFile: Returns the appropriate release file for the given programming language. Currently, it supports Go and returns an error for unsupported languages.
 func GetReleaseFile(projectLanguage string) (string, error) {
 	if projectLanguage == consts.EMPTY_STRING {
 		return consts.EMPTY_STRING, nil
@@ -118,6 +122,7 @@ func GetReleaseFile(projectLanguage string) (string, error) {
 	}
 }
 
+// GetVersionFile: Returns the version file path for the specified project language. If the language is unsupported, it returns an error.
 func GetVersionFile(projectLanguage string) (string, error) {
 	if projectLanguage == consts.EMPTY_STRING {
 		return consts.EMPTY_STRING, nil
