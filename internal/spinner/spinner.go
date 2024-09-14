@@ -1,6 +1,7 @@
 package spinner
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -10,13 +11,36 @@ import (
 	"github.com/theckman/yacspin"
 )
 
+var (
+	globalCtx             context.Context
+	cancelFunc            context.CancelFunc
+	exitFunc              func(int)      = os.Exit
+	sigCh                 chan os.Signal = make(chan os.Signal, 1)
+	defaultSpinnerCreator                = yacspin.New
+)
+
+// SpinnerInterface defines the methods used from yacspin.Spinner
+type SpinnerInterface interface {
+	Status() yacspin.SpinnerStatus
+	Message(message string)
+	StopMessage(message string)
+	StopFailMessage(message string)
+	Start() error
+	Stop() error
+	StopFail() error
+}
+
+// YacspinWrapper wraps yacspin.Spinner to implement SpinnerInterface
+type YacspinWrapper struct {
+	*yacspin.Spinner
+}
+
+func CreateSpinner() (SpinnerInterface, error) {
+	return CreateSpinnerWithCreator(defaultSpinnerCreator)
+}
+
 // CreateSpinner creates and configures a new spinner using the yacspin library.
-// The spinner is customized with specific settings like character set, colors, and stop characters for success and failure.
-// Parameters: None.
-// Returns:
-// - A pointer to the initialized yacspin.Spinner.
-// - An error if the spinner could not be created.
-func CreateSpinner() (*yacspin.Spinner, error) {
+func CreateSpinnerWithCreator(newSpinner func(yacspin.Config) (*yacspin.Spinner, error)) (SpinnerInterface, error) {
 	cfg := yacspin.Config{
 		Frequency:         100 * time.Millisecond,
 		CharSet:           yacspin.CharSets[14],
@@ -29,36 +53,54 @@ func CreateSpinner() (*yacspin.Spinner, error) {
 		StopFailColors:    []string{"fgRed"},
 	}
 
-	s, err := yacspin.New(cfg)
+	s, err := newSpinner(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make spinner from struct: %w", err)
+		// return nil, fmt.Errorf("failed to make spinner from struct: %w", err)
+		return nil, err
 	}
 
-	return s, nil
+	return &YacspinWrapper{Spinner: s}, nil
 }
 
-// StopOnSignal sets up a goroutine to stop the spinner and exit the program when an interrupt or termination signal is received.
-// It listens for OS signals like SIGINT and SIGTERM, and if such a signal is detected, it stops the spinner with a failure message and exits the program.
-// Parameters:
-// - spinner: A pointer to the yacspin.Spinner that should be stopped on receiving a signal.
-func StopOnSignal(spinner *yacspin.Spinner) {
-	sigCh := make(chan os.Signal, 1)
+func init() {
+	// Set up global context and signal handling
+	globalCtx, cancelFunc = context.WithCancel(context.Background())
+	handleSignals(cancelFunc)
+}
+
+func handleSignals(cancelFunc context.CancelFunc) {
+	// sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		<-sigCh
+		sig := <-sigCh
 
-		// Check if the spinner is running by using the Status() method
-		if spinner.Status() == yacspin.SpinnerRunning {
-			spinner.StopFailMessage("interrupted by user")
+		if sig != nil {
+			// Cancel the context to signal spinners to stop
+			cancelFunc()
 
-			// handle the error if needed
-			if err := spinner.StopFail(); err != nil {
-				// log or handle the error if stopping fails
-				fmt.Println("Error stopping spinner:", err)
+			// Give time for the message to be displayed
+			time.Sleep(200 * time.Millisecond)
+
+			if exitFunc != nil {
+				exitFunc(0)
 			}
 		}
+	}()
+}
 
-		os.Exit(0)
+// StopOnSignal sets up a spinner to stop when the global context is cancelled
+func StopOnSignal(spinner SpinnerInterface) {
+	go func() {
+		<-globalCtx.Done()
+
+		if spinner.Status() == yacspin.SpinnerRunning {
+			spinner.StopFailMessage("Interrupted by user")
+			if err := spinner.StopFail(); err != nil {
+				fmt.Println("Error stopping spinner:", err)
+			}
+		} else {
+			spinner.StopMessage("Program stopped")
+		}
 	}()
 }

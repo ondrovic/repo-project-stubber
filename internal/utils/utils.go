@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github-project-template/internal/consts"
@@ -46,64 +47,79 @@ func GrabDownloadUrl(url string) (string, error) {
 }
 
 // SaveFile: Downloads a file from the specified URL and saves it to the provided output path. It creates any necessary directories, handles overwriting existing files, and uses a spinner for user feedback.
+// SaveFile downloads a file from the specified URL and saves it to the outputPath.
+// It shows a spinner during the operation and handles interruptions.
 func SaveFile(url, outputPath string, overwrite bool) error {
+	// Create a context with cancellation
+	_, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Create a spinner with the DefaultSpinnerFactory
 	s, err := spinner.CreateSpinner()
 	if err != nil {
 		return err
 	}
 
+	// Ensure the spinner stops when the function exits
+	defer s.Stop()
+
+	// Setup StopOnSignal to handle interruptions
 	spinner.StopOnSignal(s)
 
+	// Start the spinner
 	if err := s.Start(); err != nil {
 		return err
 	}
 
-	defer s.Stop()
-
+	// Show initial processing message
 	file := filepath.Base(outputPath)
 	dir := filepath.Dir(outputPath)
+	s.Message(fmt.Sprintf("Processing %s", color.New(color.FgCyan).Sprint(file)))
 
-	s.Message(fmt.Sprintf("Processing %s", SetColor(color.LightCyan, file)))
-
+	// Check if file exists and whether to overwrite it
 	if _, err := os.Stat(outputPath); err == nil && !overwrite {
-		s.StopMessage(fmt.Sprintf("Skipped %s", SetColor(color.FgLightRed, file)))
+		s.StopMessage(fmt.Sprintf("Skipped %s", color.New(color.FgRed).Sprint(file)))
 		time.Sleep(500 * time.Millisecond)
 		return nil
 	}
 
+	// Create the directory structure if needed
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
 		s.StopFailMessage(fmt.Sprintf("failed to create directory structure for '%s': %v", outputPath, err))
 		return fmt.Errorf("failed to create directory structure for '%s': %v", outputPath, err)
 	}
 
+	// Download the file
 	resp, err := httpclient.Client.Get(url)
 	if err != nil {
-		return err
+		s.StopFailMessage(fmt.Sprintf("failed to get contents from %s: %v", url, err))
+		return fmt.Errorf("failed to get contents from %s: %v", url, err)
 	}
-
 	defer resp.Body.Close()
 
+	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		s.StopFailMessage(fmt.Sprintf("failed to get contents %s: HTTP status %d", url, resp.StatusCode))
 		return fmt.Errorf("failed to get contents %s: HTTP status %d", url, resp.StatusCode)
 	}
 
+	// Create the output file
 	out, err := os.Create(outputPath)
 	if err != nil {
 		s.StopFailMessage(fmt.Sprintf("failed to create file '%s': %v", outputPath, err))
 		return fmt.Errorf("failed to create file '%s': %v", outputPath, err)
 	}
-
 	defer out.Close()
 
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
+	// Copy response body to the file
+	if _, err := io.Copy(out, resp.Body); err != nil {
 		s.StopFailMessage(fmt.Sprintf("failed to write file '%s': %v", outputPath, err))
 		return fmt.Errorf("failed to write file '%s': %v", outputPath, err)
 	}
 
+	// Show success message
 	time.Sleep(500 * time.Millisecond)
-	s.StopMessage(fmt.Sprintf("Processed %s saved in %s", SetColor(color.FgLightGreen, file), SetColor(color.FgCyan, dir)))
+	s.StopMessage(fmt.Sprintf("Processed %s saved in %s", color.New(color.FgGreen).Sprint(file), color.New(color.FgCyan).Sprint(dir)))
 
 	return nil
 }
