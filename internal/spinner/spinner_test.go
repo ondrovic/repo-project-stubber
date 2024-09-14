@@ -57,11 +57,11 @@ func (m *MockSpinner) New(cfg yacspin.Config) (*yacspin.Spinner, error) {
 
 func TestCreateSpinner(t *testing.T) {
 	// Save the original defaultSpinnerCreator
-	originalCreator := defaultSpinnerCreator
+	originalCreator := DefaultSpinnerCreator
 
 	// Restore the original defaultSpinnerCreator after the test
 	defer func() {
-		defaultSpinnerCreator = originalCreator
+		DefaultSpinnerCreator = originalCreator
 	}()
 
 	testCases := []struct {
@@ -88,7 +88,7 @@ func TestCreateSpinner(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Set the defaultSpinnerCreator to our test function
-			defaultSpinnerCreator = tc.creatorFunc
+			DefaultSpinnerCreator = tc.creatorFunc
 
 			// Call CreateSpinner
 			spinner, err := CreateSpinner()

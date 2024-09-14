@@ -6,7 +6,16 @@ import (
 )
 
 // Client is a global variable holding the HTTP client used for making requests with authentication support.
-var Client *http.Client
+// var Client *http.Client
+// var Client interface {
+//     Do(req *http.Request) (*http.Response, error)
+// } = &http.Client{}
+
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+var Client HTTPClient
 
 type transportWithAuth struct {
 	// authToken is the authentication token used for authorized requests.
@@ -22,7 +31,7 @@ type transportWithAuth struct {
 // Returns:
 // - A pointer to the initialized http.Client.
 // - An error if any issues occur during client initialization (returns nil in this implementation).
-func InitClient(authToken string) (*http.Client, error) {
+func InitClient(authToken string) error {
 	Client = &http.Client{
 		Transport: &transportWithAuth{
 			authToken: authToken,
@@ -30,7 +39,7 @@ func InitClient(authToken string) (*http.Client, error) {
 		},
 	}
 
-	return Client, nil
+	return nil
 }
 
 // RoundTrip executes a single HTTP request using the transportWithAuth transport.

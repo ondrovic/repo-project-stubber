@@ -81,31 +81,34 @@ var (
 // }
 
 func getRepoContents(url, path, token string) ([]types.GitHubItem, error) {
-	httpClient, err := httpclient.InitClient(token)
-	if err != nil {
-		return nil, err
+	// Check if the client is initialized, if not, initialize it
+	if httpclient.Client == nil {
+		err := httpclient.InitClient(token)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize HTTP client: %v", err)
+		}
 	}
 
 	url = appendPathToUrl(url, path)
 
-	req, err := createRequest(url, "GET")
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
 
-	resp, err := httpClient.Do(req)
+	resp, err := httpclient.Client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to send request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed with %v", resp.Status)
+		return nil, fmt.Errorf("request failed with status: %v", resp.Status)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read response body: %v", err)
 	}
 
 	var contents []types.GitHubItem

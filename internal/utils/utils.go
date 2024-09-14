@@ -18,18 +18,41 @@ import (
 	"github.com/gookit/color"
 )
 
-// SetColor: Formats the given item as a string and applies the specified color to the output.
+// FileOpsInterface defines methods for file operations
+type FileOpsInterface interface {
+	Stat(name string) (os.FileInfo, error)
+	Create(name string) (*os.File, error)
+}
+
+// FileOps is a real implementation that uses os package functions
+type FileOps struct{}
+
+func (f *FileOps) Stat(name string) (os.FileInfo, error) {
+	return os.Stat(name)
+}
+
+func (f *FileOps) Create(name string) (*os.File, error) {
+	return os.Create(name)
+}
+
 func SetColor(col color.Color, item interface{}) string {
 	return col.Sprintf("%v", item)
 }
 
-// GrabDownloadUrl: Retrieves the download URL from a given API URL by making an HTTP GET request and parsing the response body.
 func GrabDownloadUrl(url string) (string, error) {
-	resp, err := httpclient.Client.Get(url)
+	if httpclient.Client == nil {
+		return consts.EMPTY_STRING, fmt.Errorf("HTTP client is not initialized")
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return consts.EMPTY_STRING, err
 	}
 
+	resp, err := httpclient.Client.Do(req)
+	if err != nil {
+		return consts.EMPTY_STRING, err
+	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
@@ -46,16 +69,17 @@ func GrabDownloadUrl(url string) (string, error) {
 	return data.DownloadURL, nil
 }
 
-// SaveFile: Downloads a file from the specified URL and saves it to the provided output path. It creates any necessary directories, handles overwriting existing files, and uses a spinner for user feedback.
-// SaveFile downloads a file from the specified URL and saves it to the outputPath.
-// It shows a spinner during the operation and handles interruptions.
 func SaveFile(url, outputPath string, overwrite bool) error {
+	return SaveFileWithSpinner(url, outputPath, overwrite, spinner.CreateSpinner, &FileOps{})
+}
+
+func SaveFileWithSpinner(url, outputPath string, overwrite bool, spinnerCreator func() (spinner.SpinnerInterface, error), fileOps FileOpsInterface) error {
 	// Create a context with cancellation
-	_, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// Create a spinner with the DefaultSpinnerFactory
-	s, err := spinner.CreateSpinner()
+	s, err := spinnerCreator()
 	if err != nil {
 		return err
 	}
@@ -77,7 +101,7 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 	s.Message(fmt.Sprintf("Processing %s", color.New(color.FgCyan).Sprint(file)))
 
 	// Check if file exists and whether to overwrite it
-	if _, err := os.Stat(outputPath); err == nil && !overwrite {
+	if _, err := fileOps.Stat(outputPath); err == nil && !overwrite {
 		s.StopMessage(fmt.Sprintf("Skipped %s", color.New(color.FgRed).Sprint(file)))
 		time.Sleep(500 * time.Millisecond)
 		return nil
@@ -89,8 +113,15 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 		return fmt.Errorf("failed to create directory structure for '%s': %v", outputPath, err)
 	}
 
+	// Create a new request
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		s.StopFailMessage(fmt.Sprintf("failed to create request for %s: %v", url, err))
+		return fmt.Errorf("failed to create request for %s: %v", url, err)
+	}
+
 	// Download the file
-	resp, err := httpclient.Client.Get(url)
+	resp, err := httpclient.Client.Do(req)
 	if err != nil {
 		s.StopFailMessage(fmt.Sprintf("failed to get contents from %s: %v", url, err))
 		return fmt.Errorf("failed to get contents from %s: %v", url, err)
@@ -104,7 +135,7 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 	}
 
 	// Create the output file
-	out, err := os.Create(outputPath)
+	out, err := fileOps.Create(outputPath)
 	if err != nil {
 		s.StopFailMessage(fmt.Sprintf("failed to create file '%s': %v", outputPath, err))
 		return fmt.Errorf("failed to create file '%s': %v", outputPath, err)
@@ -124,7 +155,6 @@ func SaveFile(url, outputPath string, overwrite bool) error {
 	return nil
 }
 
-// GetReleaseFile: Returns the appropriate release file for the given programming language. Currently, it supports Go and returns an error for unsupported languages.
 func GetReleaseFile(projectLanguage string) (string, error) {
 	if projectLanguage == consts.EMPTY_STRING {
 		return consts.EMPTY_STRING, nil
@@ -138,7 +168,6 @@ func GetReleaseFile(projectLanguage string) (string, error) {
 	}
 }
 
-// GetVersionFile: Returns the version file path for the specified project language. If the language is unsupported, it returns an error.
 func GetVersionFile(projectLanguage string) (string, error) {
 	if projectLanguage == consts.EMPTY_STRING {
 		return consts.EMPTY_STRING, nil

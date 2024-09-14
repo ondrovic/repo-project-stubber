@@ -16,7 +16,7 @@ var (
 	cancelFunc            context.CancelFunc
 	exitFunc              func(int)      = os.Exit
 	sigCh                 chan os.Signal = make(chan os.Signal, 1)
-	defaultSpinnerCreator                = yacspin.New
+	DefaultSpinnerCreator                = yacspin.New
 )
 
 // SpinnerInterface defines the methods used from yacspin.Spinner
@@ -36,7 +36,7 @@ type YacspinWrapper struct {
 }
 
 func CreateSpinner() (SpinnerInterface, error) {
-	return CreateSpinnerWithCreator(defaultSpinnerCreator)
+	return CreateSpinnerWithCreator(DefaultSpinnerCreator)
 }
 
 // CreateSpinner creates and configures a new spinner using the yacspin library.

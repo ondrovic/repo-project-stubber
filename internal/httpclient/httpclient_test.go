@@ -11,24 +11,29 @@ import (
 func TestInitClient(t *testing.T) {
 	// Arrange
 	authToken := "test-auth-token"
-	expectedTransport := transportWithAuth{
+	expectedTransport := &transportWithAuth{
 		authToken: authToken,
 		rt:        http.DefaultTransport,
 	}
 
 	// Act
-	client, err := InitClient(authToken)
+	err := InitClient(authToken)
 
 	// Assert
 	require.NoError(t, err, "InitClient should not return an error")
-	require.NotNil(t, client, "InitClient should return a non-nil client")
-	assert.IsType(t, &http.Client{}, client, "InitClient should return an *http.Client")
-	assert.IsType(t, &transportWithAuth{}, client.Transport, "Client transport should be of type *transportWithAuth")
+	require.NotNil(t, Client, "Client should be initialized")
+
+	// Type assertion to check if Client is *http.Client
+	httpClient, ok := Client.(*http.Client)
+	require.True(t, ok, "Client should be of type *http.Client")
+
+	assert.IsType(t, &transportWithAuth{}, httpClient.Transport, "Client transport should be of type *transportWithAuth")
 
 	// Type assertion to check transport properties
-	actualTransport, ok := client.Transport.(*transportWithAuth)
+	actualTransport, ok := httpClient.Transport.(*transportWithAuth)
 	require.True(t, ok, "Transport should be of type *transportWithAuth")
 	assert.Equal(t, expectedTransport.authToken, actualTransport.authToken, "Auth token should match")
+	assert.Equal(t, expectedTransport.rt, actualTransport.rt, "RoundTripper should match")
 }
 
 func TestRoundTrip_WithAuthToken(t *testing.T) {
