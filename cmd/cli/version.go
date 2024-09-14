@@ -5,14 +5,15 @@ import (
 )
 
 const (
-	// RepoOwner is the owner of the GitHub repository.
+	// RepoOwner is the default GitHub repository owner for the CLI tool.
 	RepoOwner string = "ondrovic"
-	// RepoName is the name of the GitHub repository.
+	// RepoName is the default GitHub repository name for the CLI tool.
 	RepoName string = "repo-project-stubber"
 )
 
-// init adds a new version command to RootCmd. The command includes an upgrade notice
-// based on the specified GitHub repository owner and name.
+// init adds a new version command to the root command, including an upgrade notice.
+// It initializes the version command with details about the repository owner and name.
+// Parameters: None.
 func init() {
 	RootCmd.AddCommand(
 		extension.NewVersionCobraCmd(

@@ -4,6 +4,7 @@ project:
     ✘ create validation methods @cancelled(24-09-13 12:14)
     ✔ add version bool is true download version file / else skip @done(24-09-13 17:56)
     ☐ implements proper spinners
+    ☐ adjust error output, think we want to exit on the error instead of continuing
     ✔ docstrings @done(24-09-14 09:32)
     ☐ code cleanup after
   readme.md:

@@ -10,10 +10,12 @@ import (
 	"github.com/theckman/yacspin"
 )
 
-// CreateSpinner creates and configures a new yacspin spinner with customized settings.
-// The spinner's appearance and behavior are defined in the configuration, including
-// the character set, colors, and symbols for both success and failure states.
-// It returns the configured spinner and an error if spinner creation fails.
+// CreateSpinner creates and configures a new spinner using the yacspin library.
+// The spinner is customized with specific settings like character set, colors, and stop characters for success and failure.
+// Parameters: None.
+// Returns:
+// - A pointer to the initialized yacspin.Spinner.
+// - An error if the spinner could not be created.
 func CreateSpinner() (*yacspin.Spinner, error) {
 	cfg := yacspin.Config{
 		Frequency:         100 * time.Millisecond,
@@ -35,10 +37,10 @@ func CreateSpinner() (*yacspin.Spinner, error) {
 	return s, nil
 }
 
-// StopOnSignal listens for OS interrupt signals (e.g., Ctrl+C) and stops the spinner with
-// a failure message if the signal is received. It checks if the spinner is currently running
-// and stops it using a fail message. This function ensures proper cleanup when the program
-// is interrupted by the user
+// StopOnSignal sets up a goroutine to stop the spinner and exit the program when an interrupt or termination signal is received.
+// It listens for OS signals like SIGINT and SIGTERM, and if such a signal is detected, it stops the spinner with a failure message and exits the program.
+// Parameters:
+// - spinner: A pointer to the yacspin.Spinner that should be stopped on receiving a signal.
 func StopOnSignal(spinner *yacspin.Spinner) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
