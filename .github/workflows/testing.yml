@@ -3,7 +3,8 @@ name: testing
 on:
   pull_request:
   push:
-    branches: [master]
+    branches:
+      - '*'
     tags-ignore: 
       - '*'  # Ignores all tag names
 
