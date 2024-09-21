@@ -12,6 +12,9 @@
 !LICENSE
 !generate_config.sh
 !goreleaser.yaml
+!deepsource.toml
+!TODO
+!Makefile
 
 # Include all directories recursively
 !*/
@@ -20,9 +23,6 @@
 # Include the .github
 !.github/
 !.github/**
-
-# Include TODO
-!TODO
 
 # include source files
 !go.mod

@@ -1,17 +1,21 @@
 name: testing
 
 on:
-  pull_request:
   push:
-    branches: [master]
+    branches:
+      - '**'  # Match all branches
     tags-ignore: 
-      - '*'  # Ignores all tag names
+      - '*'  # Ignore all tags
+  pull_request:
+    branches:
+      - '**'  # Match all branches
 
 jobs:
   testing:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TERM: xterm
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -1,11 +1,14 @@
 project:
-  ☐ convert items to that are needed
-  ☐ make it so the output is args[0] and then we do flags
+  ✔ make it so the output is args[0] and then we do flags @done(24-08-27 14:46)
   ☐ refactor cli some not everything is in a single file
-    ☐ swap out pfterm with bubble tea this will be a good project for it
+    ✘ create validation methods @cancelled(24-09-13 12:14)
+    ✔ add version bool is true download version file / else skip @done(24-09-13 17:56)
+    ☐ implements proper spinners
+    ☐ adjust error output, think we want to exit on the error instead of continuing
+    ✔ docstrings @done(24-09-14 09:32)
     ☐ code cleanup after
   readme.md:
-    ☐ update based on relevant project info
+    ✔ update based on relevant project info @done(24-09-14 09:51)
   testing:
-    ☐ write unit tests
+    ☐ finish writing unit tests
   
